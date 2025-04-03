@@ -11,7 +11,7 @@ if 'history' not in st.session_state:
     st.session_state.history = []
 
 st.set_page_config(page_title="Dopant Diffusivity PINN App", layout="wide")
-st.title("🧪 Unified PINN for Dopant Diffusion in Silicon")
+st.title("PINN Enhanced Difussion Solver (PEDS)")
 
 # Sidebar user input
 with st.sidebar:
