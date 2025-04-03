@@ -126,7 +126,7 @@ ax.grid(True)
 ,
         marker=markers[i],
         s=70,
-        edgecolors='k',
+        edgecolors='k'
         linewidths=0.5
     )
 
