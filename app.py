@@ -78,20 +78,34 @@ A = np.vstack([X_fit.flatten(), np.ones_like(X_fit.flatten())]).T
 Ea_fit, logD0_fit = np.linalg.lstsq(A, logD_fit, rcond=None)[0]
 
 # Plotting
-fig, ax = plt.subplots(figsize=(10, 5))
+# Enhanced Plotting
+fig, ax = plt.subplots(figsize=(10, 6), dpi=100)
 colors = ['red', 'green', 'blue', 'purple', 'orange', 'black']
+markers = ['o', 's', '^', 'D', 'P', 'x']
+
 for i, dopant in enumerate(raw_data):
     T_lit = np.array(raw_data[dopant]['T']) + 273.15
     D_lit = np.array(raw_data[dopant]['D'])
-    ax.scatter(T_lit, np.log10(D_lit), label=f"{dopant} (Lit)", color=colors[i])
+    ax.scatter(
+        T_lit,
+        np.log10(D_lit),
+        label=f"{dopant} (Lit)",
+        color=colors[i],
+        marker=markers[i],
+        s=70,
+        edgecolors='k',
+        linewidths=0.5
+    )
 
 ax.plot(T_predict, logD_pred, 'k--', label='PINN Prediction', linewidth=2)
-ax.set_xlabel("Temperature (K)")
-ax.set_ylabel("log10(Diffusivity [cm²/s])")
-ax.set_title("PINN Prediction vs Literature Data")
-ax.legend()
-ax.grid(True)
+
+ax.set_xlabel("Temperature (K)", fontsize=12)
+ax.set_ylabel(r"$\log_{10}$(Diffusivity) [cm²/s]", fontsize=12)
+ax.set_title("📊 PINN Prediction vs Literature Data", fontsize=14, weight='bold')
+ax.legend(loc='best', fontsize=9)
+ax.grid(True, linestyle='--', alpha=0.6)
 st.pyplot(fig)
+
 
 # Ea & D0 display
 Ea_eV = Ea_fit * 8.617e-5  # eV
