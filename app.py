@@ -16,7 +16,6 @@ st.caption("Powered by Physics-Informed Neural Networks • Built with ❤️ in
 
 # Sidebar user input
 with st.sidebar:
-  with st.sidebar:
     st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Silicon_Structure.svg/2560px-Silicon_Structure.svg.png", use_column_width=True)
     st.subheader("🔧 Choose Settings")
 
@@ -116,19 +115,12 @@ for dopant, color in dopant_colors.items():
     T_lit = np.array(raw_data[dopant]['T']) + 273.15
     D_lit = np.array(raw_data[dopant]['D'])
     ax.scatter(T_lit, np.log10(D_lit), label=f"{dopant} (Literature)", color=color, s=60, edgecolors='k', alpha=0.8)
-
-ax.plot(T_predict, logD_pred, 'black', linestyle='--', linewidth=2, label='PINN Prediction')
+    
 ax.set_xlabel("Temperature (K)", fontsize=12)
 ax.set_ylabel("log₁₀(Diffusivity [cm²/s])", fontsize=12)
 ax.set_title("📈 PINN Prediction vs Literature Data", fontsize=14)
 ax.legend()
 ax.grid(True)
-,
-        marker=markers[i],
-        s=70,
-        edgecolors='k'
-        linewidths=0.5
-    )
 
 ax.plot(T_predict, logD_pred, 'k--', label='PINN Prediction', linewidth=2)
 
