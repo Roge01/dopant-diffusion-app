@@ -72,7 +72,18 @@ model = tf.keras.Sequential([
     tf.keras.layers.Dense(1)
 ])
 model.compile(optimizer='adam', loss='mse')
-model.fit(X_scaled, y, epochs=1000, verbose=0)
+@st.cache_resource
+def train_model():
+    model = tf.keras.Sequential([
+        tf.keras.layers.Dense(64, activation='tanh', input_shape=(1,)),
+        tf.keras.layers.Dense(64, activation='tanh'),
+        tf.keras.layers.Dense(1)
+    ])
+    model.compile(optimizer='adam', loss='mse')
+    model.fit(X_scaled, y, epochs=1000, verbose=0)
+    return model
+
+model = train_model()
 
 # Prediction
 T_predict = np.linspace(600, 1300, 300) + 273.15
