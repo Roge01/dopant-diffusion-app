@@ -10,8 +10,8 @@ from io import BytesIO
 if 'history' not in st.session_state:
     st.session_state.history = []
 
-st.set_page_config(page_title="DiffuLab: Intelligent Dopant Diffusion Modeling", layout="wide")
-st.title("🧬 DiffuLab: Intelligent Dopant Diffusion Modeling")
+st.set_page_config(page_title="ML-Enhanced Diffusion Modeling", layout="wide")
+st.title("🧬 DiffuLab: ML-Enhanced Diffusion Modeling")
 st.caption("Powered by Physics-Informed Neural Networks • Built with ❤️ in Streamlit")
 
 # Sidebar user input
@@ -171,7 +171,7 @@ st.download_button("⬇️ Download Plot as PNG", buf.getvalue(), file_name="dif
 st.markdown("### 💾 Session Save & Load")
 
 # Save session
-if st.button("💾 Save Session"):
+if st.button("💾 Save Session to file"):
     session_dict = {
         "dopant": selected_dopant,
         "temperature_C": temp_input,
