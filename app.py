@@ -196,7 +196,7 @@ if xyz_export:
 # -- SESSION HISTORY MANAGEMENT --
 
 # Save to session
-if st.button("💾 Save Session"):
+if st.button("💾 Save Session", key="save_session"):
     st.session_state.history.append({
         "dopant": selected_dopant,
         "temperature_C": temp_input,
