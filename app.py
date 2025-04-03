@@ -10,19 +10,29 @@ from io import BytesIO
 if 'history' not in st.session_state:
     st.session_state.history = []
 
-st.set_page_config(page_title="Dopant Diffusivity PINN App", layout="wide")
-st.title("PINN Enhanced Difussion Solver (PEDS)")
+st.set_page_config(page_title="DiffuLab: Intelligent Dopant Diffusion Modeling", layout="wide")
+st.title("🧬 DiffuLab: Intelligent Dopant Diffusion Modeling")
+st.caption("Powered by Physics-Informed Neural Networks • Built with ❤️ in Streamlit")
 
 # Sidebar user input
 with st.sidebar:
-    st.header("📌 Dopant Settings")
-    selected_dopant = st.selectbox("Choose a dopant", [
+  with st.sidebar:
+    st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Silicon_Structure.svg/2560px-Silicon_Structure.svg.png", use_column_width=True)
+    st.subheader("🔧 Choose Settings")
+
+    selected_dopant = st.selectbox("🧪 Dopant", [
         "Phosphorus", "Boron", "Arsenic", "Antimony", "Gallium", "Nitrogen"])
 
-    temp_input = st.slider("Temperature (°C)", 600, 1300, 1000)
+    temp_input = st.slider("🌡️ Temperature (°C)", 600, 1300, 1000)
+
+    st.markdown("---")
+    st.subheader("📁 Upload New Data")
+    uploaded_file = st.file_uploader("Upload Dopant CSV (T, D)", type=["csv"])
+
     st.markdown("---")
 
-    uploaded_file = st.file_uploader("Upload New Dopant CSV", type=["csv"])
+    st.caption("🔬 Created by Rogelio Lopez")
+
 
 # Hardcoded dopant data
 raw_data = {
@@ -79,18 +89,30 @@ Ea_fit, logD0_fit = np.linalg.lstsq(A, logD_fit, rcond=None)[0]
 
 # Plotting
 # Enhanced Plotting
-fig, ax = plt.subplots(figsize=(10, 6), dpi=100)
-colors = ['red', 'green', 'blue', 'purple', 'orange', 'black']
-markers = ['o', 's', '^', 'D', 'P', 'x']
+plt.style.use("seaborn-v0_8-darkgrid")
+fig, ax = plt.subplots(figsize=(12, 6))
 
-for i, dopant in enumerate(raw_data):
+dopant_colors = {
+    "Phosphorus": "red",
+    "Boron": "blue",
+    "Arsenic": "green",
+    "Antimony": "orange",
+    "Gallium": "purple",
+    "Nitrogen": "brown"
+}
+
+for dopant, color in dopant_colors.items():
     T_lit = np.array(raw_data[dopant]['T']) + 273.15
     D_lit = np.array(raw_data[dopant]['D'])
-    ax.scatter(
-        T_lit,
-        np.log10(D_lit),
-        label=f"{dopant} (Lit)",
-        color=colors[i],
+    ax.scatter(T_lit, np.log10(D_lit), label=f"{dopant} (Literature)", color=color, s=60, edgecolors='k', alpha=0.8)
+
+ax.plot(T_predict, logD_pred, 'black', linestyle='--', linewidth=2, label='PINN Prediction')
+ax.set_xlabel("Temperature (K)", fontsize=12)
+ax.set_ylabel("log₁₀(Diffusivity [cm²/s])", fontsize=12)
+ax.set_title("📈 PINN Prediction vs Literature Data", fontsize=14)
+ax.legend()
+ax.grid(True)
+,
         marker=markers[i],
         s=70,
         edgecolors='k',
