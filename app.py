@@ -7,7 +7,8 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import r2_score
 from io import BytesIO
 import plotly.graph_objects as go
-import plotly.graph_objects as go
+from sklearn.linear_model import LinearRegression
+
 
 
 
@@ -92,6 +93,23 @@ invT_predict = 1 / T_predict
 invT_scaled = scaler_X.transform(invT_predict.reshape(-1, 1))
 logD_pred = model.predict(invT_scaled)
 D_pred = 10**logD_pred.flatten()
+# --------------------------------------------------------------------
+# Calculate confidence interval for log10(D_pred)
+X_fit = 1 / T_predict.reshape(-1, 1)  # Inverse temperature
+y_fit = np.log10(D_pred).reshape(-1, 1)  # Log of diffusivity prediction
+
+# Fit a simple linear regression (Arrhenius-style)
+reg_model = LinearRegression().fit(X_fit, y_fit)
+y_pred = reg_model.predict(X_fit)
+
+# Residuals and standard deviation
+residuals = y_fit - y_pred
+std_resid = np.std(residuals)
+
+# 95% confidence interval width
+ci = 1.96 * std_resid
+logD_pred = y_pred.flatten()  # Final predicted line to plot
+
 # Calculate confidence interval (assuming residual normality)
 residuals = logD_fit - model.predict(invT_scaled).flatten()
 std_resid = np.std(residuals)
