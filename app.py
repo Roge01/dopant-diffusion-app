@@ -224,6 +224,9 @@ uploaded_session = st.file_uploader("📤 Upload Session CSV", type=["csv"], key
 # ----------------------------- LOAD SESSION FROM FILE
 uploaded_session = st.file_uploader("📤 Upload Session CSV", type=["csv"], key="session")
 
+# ----------------------------- LOAD SESSION FROM FILE
+uploaded_session = st.file_uploader("📤 Upload Session CSV", type=["csv"], key="session")
+
 if uploaded_session is not None:
     loaded_df = pd.read_csv(uploaded_session)
     st.success("✅ Session loaded successfully!")
@@ -241,64 +244,35 @@ if uploaded_session is not None:
     # ----------------------------- 3D DEPTH-RESOLVED PLOT
     st.markdown("### 🌐 3D Depth-Resolved Diffusion Visualization")
 
-    if len(loaded_df["T_K"]) >= 100 and len(loaded_df["D_pred"]) >= 100:
-        z_depth = np.linspace(0, 10, 100)
-        D_surface = np.array(loaded_df["D_pred"][:100])
-        profile_map = np.outer(D_surface, np.exp(-z_depth / 5))
+    if "T_K" in loaded_df.columns and "D_pred" in loaded_df.columns:
+        if len(loaded_df["T_K"]) >= 100 and len(loaded_df["D_pred"]) >= 100:
+            z_depth = np.linspace(0, 10, 100)
+            D_surface = np.array(loaded_df["D_pred"][:100])
+            profile_map = np.outer(D_surface, np.exp(-z_depth / 5))
 
-        fig3d = go.Figure(data=[go.Surface(
-            z=profile_map,
-            x=z_depth,
-            y=loaded_df["T_K"][:100],
-            colorscale='Viridis',
-            colorbar=dict(title="D (cm²/s)")
-        )])
+            fig3d = go.Figure(data=[go.Surface(
+                z=profile_map,
+                x=z_depth,
+                y=loaded_df["T_K"][:100],
+                colorscale='Viridis',
+                colorbar=dict(title="D (cm²/s)")
+            )])
 
-        fig3d.update_layout(
-            scene=dict(
-                xaxis_title='Depth (nm)',
-                yaxis_title='Temperature (K)',
-                zaxis_title='Diffusivity',
-            ),
-            height=600,
-            margin=dict(l=10, r=10, b=10, t=10)
-        )
+            fig3d.update_layout(
+                scene=dict(
+                    xaxis_title='Depth (nm)',
+                    yaxis_title='Temperature (K)',
+                    zaxis_title='Diffusivity',
+                ),
+                height=600,
+                margin=dict(l=10, r=10, b=10, t=10)
+            )
 
-        st.plotly_chart(fig3d, use_container_width=True)
+            st.plotly_chart(fig3d, use_container_width=True)
+        else:
+            st.warning("📉 Not enough data points to generate a 3D surface (need at least 100 rows).")
     else:
-        st.warning("📉 Not enough data points to generate a 3D surface (need at least 100 rows).")
-
-    # ----------------------------- 3D DEPTH-RESOLVED PLOT
-    st.markdown("### 🌐 3D Depth-Resolved Diffusion Visualization")
-
-    # Simulate a vertical diffusion profile
-    z_depth = np.linspace(0, 10, 100)  # depth in nanometers
-    D_surface = np.array(loaded_df["D_pred"][:100])
-    profile_map = np.outer(D_surface, np.exp(-z_depth / 5))  # decay simulation
-
-    fig3d = go.Figure(data=[go.Surface(
-        z=profile_map,
-        x=z_depth,
-        y=loaded_df["T_K"][:100],
-        colorscale='Viridis',
-        colorbar=dict(title="D (cm²/s)")
-    )])
-
-    fig3d.update_layout(
-        scene=dict(
-            xaxis_title='Depth (nm)',
-            yaxis_title='Temperature (K)',
-            zaxis_title='Diffusivity',
-        ),
-        height=600,
-        margin=dict(l=10, r=10, b=10, t=10)
-    )
-
-    st.plotly_chart(fig3d, use_container_width=True)
-
-
-    except Exception as e:
-        st.error(f"❌ Failed to load session: {e}")
+        st.error("❌ CSV is missing required columns: 'T_K' and/or 'D_pred'.")
 
 # ----------------------------- EXPORT TO .XYZ FOR OVITO / VMD / LAMMPS
 st.markdown("### 🧬 Export for LAMMPS / OVITO / VMD")
