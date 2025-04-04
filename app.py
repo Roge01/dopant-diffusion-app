@@ -212,46 +212,55 @@ if st.button("💾 Save Current Session to File"):
 
 # ----------------------------- LOAD SESSION FROM FILE
 uploaded_session = st.file_uploader("📤 Upload Session CSV", type=["csv"], key="session")
+# ----------------------------- LOAD SESSION FROM FILE
+uploaded_session = st.file_uploader("📤 Upload Session CSV", type=["csv"], key="session")
+
 if uploaded_session is not None:
-try:
-    fig2, ax2 = plt.subplots(figsize=(10, 4))
-    ax2.plot(loaded_df["T_K"], np.log10(loaded_df["D_pred"]), 'b-', label="Loaded Session")
-    ax2.set_xlabel("Temperature (K)")
-    ax2.set_ylabel("log10(Diffusivity [cm²/s])")
-    ax2.set_title("Loaded Session Prediction")
-    ax2.grid(True)
-    ax2.legend()
-    st.pyplot(fig2)
+    try:
+        loaded_df = pd.read_csv(uploaded_session)
+        st.success("✅ Session loaded successfully!")
 
-except Exception as e:
-    st.error(f"❌ Failed to load session: {e}")
-        # ----------------------------- 3D DEPTH-RESOLVED PLOT
-st.markdown("### 🌐 3D Depth-Resolved Diffusion Visualization")
+        # Plot 2D session
+        fig2, ax2 = plt.subplots(figsize=(10, 4))
+        ax2.plot(loaded_df["T_K"], np.log10(loaded_df["D_pred"]), 'b-', label="Loaded Session")
+        ax2.set_xlabel("Temperature (K)")
+        ax2.set_ylabel("log10(Diffusivity [cm²/s])")
+        ax2.set_title("Loaded Session Prediction")
+        ax2.grid(True)
+        ax2.legend()
+        st.pyplot(fig2)
 
-# Simulated depth profile using exponential decay
-z_depth = np.linspace(0, 10, 100)  # depth in nanometers
-D_surface = D_pred[:100]  # top layer predicted diffusivities
-profile_map = np.outer(D_surface, np.exp(-z_depth / 5))  # simulate vertical decay
+    except Exception as e:
+        st.error(f"❌ Failed to load session: {e}")
 
-fig3d = go.Figure(data=[go.Surface(
-    z=profile_map,
-    x=z_depth,
-    y=T_predict[:100],
-    colorscale='Viridis',
-    colorbar=dict(title="D (cm²/s)")
-)])
+    # ----------------------------- 3D DEPTH-RESOLVED PLOT
+    st.markdown("### 🌐 3D Depth-Resolved Diffusion Visualization")
 
-fig3d.update_layout(
-    scene=dict(
-        xaxis_title='Depth (nm)',
-        yaxis_title='Temperature (K)',
-        zaxis_title='Diffusivity',
-    ),
-    height=600,
-    margin=dict(l=10, r=10, b=10, t=10)
-)
+    # Simulate a vertical diffusion profile
+    z_depth = np.linspace(0, 10, 100)  # depth in nanometers
+    D_surface = np.array(loaded_df["D_pred"][:100])
+    profile_map = np.outer(D_surface, np.exp(-z_depth / 5))  # decay simulation
 
-st.plotly_chart(fig3d, use_container_width=True)
+    fig3d = go.Figure(data=[go.Surface(
+        z=profile_map,
+        x=z_depth,
+        y=loaded_df["T_K"][:100],
+        colorscale='Viridis',
+        colorbar=dict(title="D (cm²/s)")
+    )])
+
+    fig3d.update_layout(
+        scene=dict(
+            xaxis_title='Depth (nm)',
+            yaxis_title='Temperature (K)',
+            zaxis_title='Diffusivity',
+        ),
+        height=600,
+        margin=dict(l=10, r=10, b=10, t=10)
+    )
+
+    st.plotly_chart(fig3d, use_container_width=True)
+
 
     except Exception as e:
         st.error(f"❌ Failed to load session: {e}")
