@@ -221,25 +221,28 @@ uploaded_session = st.file_uploader("📤 Upload Session CSV", type=["csv"], key
 # ----------------------------- LOAD SESSION FROM FILE
 uploaded_session = st.file_uploader("📤 Upload Session CSV", type=["csv"], key="session")
 
+# ----------------------------- LOAD SESSION FROM FILE
+uploaded_session = st.file_uploader("📤 Upload Session CSV", type=["csv"], key="session")
+
 if uploaded_session is not None:
-    try:
-        loaded_df = pd.read_csv(uploaded_session)
-        st.success("✅ Session loaded successfully!")
+    loaded_df = pd.read_csv(uploaded_session)
+    st.success("✅ Session loaded successfully!")
 
-        # Plot loaded session (2D)
-        fig2, ax2 = plt.subplots(figsize=(10, 4))
-        ax2.plot(loaded_df["T_K"], np.log10(loaded_df["D_pred"]), 'b-', label="Loaded Session")
-        ax2.set_xlabel("Temperature (K)")
-        ax2.set_ylabel("log10(Diffusivity [cm²/s])")
-        ax2.set_title("Loaded Session Prediction")
-        ax2.grid(True)
-        ax2.legend()
-        st.pyplot(fig2)
+    # Plot loaded session (2D)
+    fig2, ax2 = plt.subplots(figsize=(10, 4))
+    ax2.plot(loaded_df["T_K"], np.log10(loaded_df["D_pred"]), 'b-', label="Loaded Session")
+    ax2.set_xlabel("Temperature (K)")
+    ax2.set_ylabel("log10(Diffusivity [cm²/s])")
+    ax2.set_title("Loaded Session Prediction")
+    ax2.grid(True)
+    ax2.legend()
+    st.pyplot(fig2)
 
-        # ----------------------------- 3D DEPTH-RESOLVED PLOT
-        st.markdown("### 🌐 3D Depth-Resolved Diffusion Visualization")
+    # ----------------------------- 3D DEPTH-RESOLVED PLOT
+    st.markdown("### 🌐 3D Depth-Resolved Diffusion Visualization")
 
-        z_depth = np.linspace(0, 10, 100)  # depth in nanometers
+    if len(loaded_df["T_K"]) >= 100 and len(loaded_df["D_pred"]) >= 100:
+        z_depth = np.linspace(0, 10, 100)
         D_surface = np.array(loaded_df["D_pred"][:100])
         profile_map = np.outer(D_surface, np.exp(-z_depth / 5))
 
@@ -262,10 +265,8 @@ if uploaded_session is not None:
         )
 
         st.plotly_chart(fig3d, use_container_width=True)
-
-    except Exception as e:
-        st.error(f"❌ Failed to load session: {e}")
-
+    else:
+        st.warning("📉 Not enough data points to generate a 3D surface (need at least 100 rows).")
 
     # ----------------------------- 3D DEPTH-RESOLVED PLOT
     st.markdown("### 🌐 3D Depth-Resolved Diffusion Visualization")
