@@ -90,17 +90,17 @@ invT_predict = 1 / T_predict
 invT_scaled = scaler_X.transform(invT_predict.reshape(-1, 1))
 logD_pred = model.predict(invT_scaled)
 D_pred = 10**logD_pred.flatten()
-# Compute R² score
-y_pred_for_r2 = model.predict(invT_scaled)
-r2 = r2_score(logD_fit, y_pred_for_r2)
-st.metric("📊 R² Score of Model", f"{r2:.4f}")
-
 
 # Arrhenius Fit
 X_fit = 1 / T_predict.reshape(-1, 1)
 logD_fit = np.log10(D_pred)
 A = np.vstack([X_fit.flatten(), np.ones_like(X_fit.flatten())]).T
 Ea_fit, logD0_fit = np.linalg.lstsq(A, logD_fit, rcond=None)[0]
+
+# Compute R² score
+y_pred_for_r2 = model.predict(invT_scaled)
+r2 = r2_score(logD_fit, y_pred_for_r2)
+st.metric("📊 R² Score of Model", f"{r2:.4f}")
 
 # Plotting
 # Enhanced Plotting
