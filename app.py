@@ -213,16 +213,7 @@ if st.button("💾 Save Current Session to File"):
 # ----------------------------- LOAD SESSION FROM FILE
 uploaded_session = st.file_uploader("📤 Upload Session CSV", type=["csv"], key="session")
 # ----------------------------- LOAD SESSION FROM FILE
-uploaded_session = st.file_uploader("📤 Upload Session CSV", type=["csv"], key="session")
-
-# ----------------------------- LOAD SESSION FROM FILE
-uploaded_session = st.file_uploader("📤 Upload Session CSV", type=["csv"], key="session")
-
-# ----------------------------- LOAD SESSION FROM FILE
-uploaded_session = st.file_uploader("📤 Upload Session CSV", type=["csv"], key="session")
-
-# ----------------------------- LOAD SESSION FROM FILE
-uploaded_session = st.file_uploader("📤 Upload Session CSV", type=["csv"], key="session")
+uploaded_session = st.file_uploader("📤 Upload Session CSV", type=["csv"], key="uploaded_session_file")
 
 # ----------------------------- LOAD SESSION FROM FILE
 uploaded_session = st.file_uploader("📤 Upload Session CSV", type=["csv"], key="session_upload")
