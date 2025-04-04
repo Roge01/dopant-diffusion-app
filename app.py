@@ -43,9 +43,6 @@ raw_data = {
     "Gallium":    {"T": [900, 1000, 1100],                 "D": [2.1e-16, 1.0e-15, 5.3e-15]},
     "Nitrogen":   {"T": [800, 900, 1000, 1100, 1200],      "D": [2.9e-20, 2.7e-19, 1.9e-18, 1.2e-17, 5.0e-17]}
 }
-st.subheader("🔍 Compare Two Dopants")
-dopant_1 = st.selectbox("Select Dopant 1", list(raw_data.keys()), index=0, key="dopant1")
-dopant_2 = st.selectbox("Select Dopant 2", list(raw_data.keys()), index=1, key="dopant2")
 
 if uploaded_file is not None:
     try:
@@ -121,6 +118,9 @@ dopant_colors = {
 }
 
 fig, ax = plt.subplots(figsize=(12, 6))
+st.subheader("🔬 Compare Two Dopants")
+dopant_1 = st.selectbox("Select Dopant 1", list(raw_data.keys()), index=0, key="dopant1")
+dopant_2 = st.selectbox("Select Dopant 2", list(raw_data.keys()), index=1, key="dopant2")
 
 for dopant in [dopant_1, dopant_2]:
     T_vals = np.array(raw_data[dopant]['T']) + 273.15
