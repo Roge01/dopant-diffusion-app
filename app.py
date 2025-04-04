@@ -24,8 +24,6 @@ with st.sidebar:
 
     temp_input = st.slider("🌡️ Temperature (°C)", 600, 1300, 1000)
 
-    st.subheader("🔍 Compare Two Dopants")
-    dopant_1 = st.selectbox("Select Dopant 1", list(raw_data.keys()), index=0, key="dopant1")
     dopant_2 = st.selectbox("Select Dopant 2", list(raw_data.keys()), index=1, key="dopant2")
 
     st.markdown("---")
