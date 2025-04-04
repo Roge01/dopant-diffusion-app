@@ -214,19 +214,17 @@ if st.button("💾 Save Current Session to File"):
 uploaded_session = st.file_uploader("📤 Upload Session CSV", type=["csv"], key="session")
 if uploaded_session is not None:
     try:
-        loaded_df = pd.read_csv(uploaded_session)
-        st.success("✅ Session loaded successfully!")
-        fig2, ax2 = plt.subplots(figsize=(10, 4))
-        ax2.plot(loaded_df["T_K"], np.log10(loaded_df["D_pred"]), 'b-', label="Loaded Session")
-        ax2.set_xlabel("Temperature (K)")
-        ax2.set_ylabel("log10(Diffusivity [cm²/s])")
-        ax2.set_title("Loaded Session Prediction")
-        ax2.grid(True)
-        ax2.legend()
-        st.pyplot(fig2)
-        except Exception as e:
-    st.error(f"❌ Failed to load session: {e}")
+    fig2, ax2 = plt.subplots(figsize=(10, 4))
+    ax2.plot(loaded_df["T_K"], np.log10(loaded_df["D_pred"]), 'b-', label="Loaded Session")
+    ax2.set_xlabel("Temperature (K)")
+    ax2.set_ylabel("log10(Diffusivity [cm²/s])")
+    ax2.set_title("Loaded Session Prediction")
+    ax2.grid(True)
+    ax2.legend()
+    st.pyplot(fig2)
 
+except Exception as e:
+    st.error(f"❌ Failed to load session: {e}")
         # ----------------------------- 3D DEPTH-RESOLVED PLOT
 st.markdown("### 🌐 3D Depth-Resolved Diffusion Visualization")
 
