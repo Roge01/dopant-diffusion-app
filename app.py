@@ -92,6 +92,12 @@ invT_predict = 1 / T_predict
 invT_scaled = scaler_X.transform(invT_predict.reshape(-1, 1))
 logD_pred = model.predict(invT_scaled)
 D_pred = 10**logD_pred.flatten()
+# Calculate confidence interval (assuming residual normality)
+residuals = logD_fit - model.predict(invT_scaled).flatten()
+std_resid = np.std(residuals)
+
+ci = 1.96 * std_resid  # 95% confidence interval width
+
 
 # Arrhenius Fit
 X_fit = 1 / T_predict.reshape(-1, 1)
