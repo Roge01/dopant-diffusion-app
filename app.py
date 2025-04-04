@@ -218,6 +218,9 @@ uploaded_session = st.file_uploader("📤 Upload Session CSV", type=["csv"], key
 # ----------------------------- LOAD SESSION FROM FILE
 uploaded_session = st.file_uploader("📤 Upload Session CSV", type=["csv"], key="session")
 
+# ----------------------------- LOAD SESSION FROM FILE
+uploaded_session = st.file_uploader("📤 Upload Session CSV", type=["csv"], key="session")
+
 if uploaded_session is not None:
     try:
         loaded_df = pd.read_csv(uploaded_session)
