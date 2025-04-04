@@ -7,6 +7,8 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import r2_score
 from io import BytesIO
 import plotly.graph_objects as go
+import plotly.graph_objects as go
+
 
 
 # ----------------------------- DATA (move to top to fix NameError)
@@ -222,6 +224,9 @@ if uploaded_session is not None:
         ax2.grid(True)
         ax2.legend()
         st.pyplot(fig2)
+        except Exception as e:
+    st.error(f"❌ Failed to load session: {e}")
+
         # ----------------------------- 3D DEPTH-RESOLVED PLOT
 st.markdown("### 🌐 3D Depth-Resolved Diffusion Visualization")
 
