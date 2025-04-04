@@ -155,10 +155,10 @@ if st.session_state.plot_scale == "Linear D":
     ax.set_yscale("linear")
     ax.set_ylim(1e-20, 1e-12)
 else:
-   # Plot PINN Prediction with Confidence Interval
-ax.plot(T_predict, logD_pred, 'k--', label='PINN Prediction')
-ax.fill_between(T_predict, logD_pred - ci, logD_pred + ci, color='gray', alpha=0.3, label='95% CI')
-ax.set_ylabel("log₁₀(Diffusivity [cm²/s])")
+    # Plot PINN Prediction with Confidence Interval
+    ax.plot(T_predict, logD_pred, 'k--', label='PINN Prediction')
+    ax.fill_between(T_predict, logD_pred - ci, logD_pred + ci, color='gray', alpha=0.3, label='95% CI')
+    ax.set_ylabel("log₁₀(Diffusivity [cm²/s])")
 
 
 if st.session_state.temp_unit == "Celsius (°C)":
