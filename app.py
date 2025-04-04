@@ -213,7 +213,7 @@ if st.button("💾 Save Current Session to File"):
 # ----------------------------- LOAD SESSION FROM FILE
 uploaded_session = st.file_uploader("📤 Upload Session CSV", type=["csv"], key="session")
 if uploaded_session is not None:
-    try:
+try:
     fig2, ax2 = plt.subplots(figsize=(10, 4))
     ax2.plot(loaded_df["T_K"], np.log10(loaded_df["D_pred"]), 'b-', label="Loaded Session")
     ax2.set_xlabel("Temperature (K)")
