@@ -220,7 +220,6 @@ if uploaded_session is not None:
         loaded_df = pd.read_csv(uploaded_session)
         st.success("✅ Session loaded successfully!")
 
-        # Plot 2D session
         fig2, ax2 = plt.subplots(figsize=(10, 4))
         ax2.plot(loaded_df["T_K"], np.log10(loaded_df["D_pred"]), 'b-', label="Loaded Session")
         ax2.set_xlabel("Temperature (K)")
@@ -231,6 +230,8 @@ if uploaded_session is not None:
         st.pyplot(fig2)
 
     except Exception as e:
+        st.error(f"❌ Failed to load session: {e}")
+
         st.error(f"❌ Failed to load session: {e}")
 
     # ----------------------------- 3D DEPTH-RESOLVED PLOT
