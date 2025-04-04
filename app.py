@@ -6,6 +6,8 @@ import tensorflow as tf
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import r2_score
 from io import BytesIO
+import plotly.graph_objects as go
+
 
 # ----------------------------- DATA (move to top to fix NameError)
 raw_data = {
@@ -167,3 +169,146 @@ T_user = temp_input + 273.15
 invT_user = 1 / T_user
 D_user = 10 ** model.predict(scaler_X.transform([[invT_user]])).flatten()[0]
 st.info(f"📍 At {temp_input}°C, predicted D ≈ {D_user:.2e} cm²/s")
+with st.expander("🔁 Inverse Prediction: Find Temperature from D"):
+    logD_input = st.number_input("Enter log₁₀(Diffusivity)", value=-16.0, step=0.1, format="%.2f")
+
+    invT_range = np.linspace(1 / (1300 + 273.15), 1 / (600 + 273.15), 500).reshape(-1, 1)
+    invT_scaled = scaler_X.transform(invT_range)
+    logD_pred_range = model.predict(invT_scaled).flatten()
+
+    idx = np.argmin(np.abs(logD_pred_range - logD_input))
+    T_estimate_K = 1 / invT_range[idx][0]
+    T_estimate_C = T_estimate_K - 273.15
+
+    st.write(f"Estimated Temperature: **{T_estimate_C:.2f} °C** ({T_estimate_K:.2f} K)")
+
+# ----------------------------- SAVE PREDICTION AS CSV
+csv_data = pd.DataFrame({
+    "T (K)": T_predict,
+    "D (cm²/s)": D_pred
+})
+csv_file = csv_data.to_csv(index=False).encode()
+st.download_button("⬇️ Download Prediction CSV", csv_file, file_name="pinn_diffusion.csv")
+
+# ----------------------------- SAVE PLOT AS PNG
+buf = BytesIO()
+fig.savefig(buf, format="png")
+st.download_button("🖼️ Download Plot as PNG", buf.getvalue(), file_name="diffusion_plot.png")
+
+# ----------------------------- SAVE CURRENT SESSION
+st.markdown("### 💾 Session Save & Load")
+if st.button("💾 Save Current Session to File"):
+    session_dict = {
+        "dopant": selected_dopant,
+        "temperature_C": temp_input,
+        "D_pred": D_pred.tolist(),
+        "T_K": T_predict.tolist()
+    }
+    session_df = pd.DataFrame(session_dict)
+    session_csv = session_df.to_csv(index=False).encode()
+    st.download_button("⬇️ Download Session CSV", session_csv, file_name="session_data.csv")
+
+# ----------------------------- LOAD SESSION FROM FILE
+uploaded_session = st.file_uploader("📤 Upload Session CSV", type=["csv"], key="session")
+if uploaded_session is not None:
+    try:
+        loaded_df = pd.read_csv(uploaded_session)
+        st.success("✅ Session loaded successfully!")
+        fig2, ax2 = plt.subplots(figsize=(10, 4))
+        ax2.plot(loaded_df["T_K"], np.log10(loaded_df["D_pred"]), 'b-', label="Loaded Session")
+        ax2.set_xlabel("Temperature (K)")
+        ax2.set_ylabel("log10(Diffusivity [cm²/s])")
+        ax2.set_title("Loaded Session Prediction")
+        ax2.grid(True)
+        ax2.legend()
+        st.pyplot(fig2)
+        # ----------------------------- 3D DEPTH-RESOLVED PLOT
+st.markdown("### 🌐 3D Depth-Resolved Diffusion Visualization")
+
+# Simulated depth profile using exponential decay
+z_depth = np.linspace(0, 10, 100)  # depth in nanometers
+D_surface = D_pred[:100]  # top layer predicted diffusivities
+profile_map = np.outer(D_surface, np.exp(-z_depth / 5))  # simulate vertical decay
+
+fig3d = go.Figure(data=[go.Surface(
+    z=profile_map,
+    x=z_depth,
+    y=T_predict[:100],
+    colorscale='Viridis',
+    colorbar=dict(title="D (cm²/s)")
+)])
+
+fig3d.update_layout(
+    scene=dict(
+        xaxis_title='Depth (nm)',
+        yaxis_title='Temperature (K)',
+        zaxis_title='Diffusivity',
+    ),
+    height=600,
+    margin=dict(l=10, r=10, b=10, t=10)
+)
+
+st.plotly_chart(fig3d, use_container_width=True)
+
+    except Exception as e:
+        st.error(f"❌ Failed to load session: {e}")
+
+# ----------------------------- EXPORT TO .XYZ FOR OVITO / VMD / LAMMPS
+st.markdown("### 🧬 Export for LAMMPS / OVITO / VMD")
+xyz_export = st.button("📤 Generate .xyz File for Visualization Tools")
+if xyz_export:
+    num_atoms = 100
+    z_positions = np.linspace(0, 100, num_atoms)
+    concentrations = D_pred[:num_atoms] / np.max(D_pred)
+    xyz_lines = [f"{num_atoms}", "Dopant profile exported from PINN"]
+    for i in range(num_atoms):
+        xyz_lines.append(f"{selected_dopant[0]} 0.0 0.0 {z_positions[i]:.3f} {concentrations[i]:.4f}")
+    xyz_text = "\n".join(xyz_lines)
+    st.code(xyz_text, language="xyz")
+    xyz_bytes = xyz_text.encode()
+    st.download_button("⬇️ Download .xyz File", xyz_bytes, file_name=f"{selected_dopant}_profile.xyz")
+    # ----------------------------- MULTI-DOPANT .XYZ EXPORT
+st.markdown("### 🧬 Multi-Dopant Export for VMD / LAMMPS / OVITO")
+
+selected_elements = st.multiselect("Choose Dopants to Include", list(raw_data.keys()), default=["Phosphorus", "Boron"])
+
+if st.button("📤 Generate Multi-Dopant .xyz"):
+    num_atoms = 100
+    z_positions = np.linspace(0, 100, num_atoms)
+    xyz_lines = [f"{num_atoms * len(selected_elements)}", "Multi-Dopant Diffusion Profile Export"]
+
+    for dopant in selected_elements:
+        D_vals = np.log10(np.array(raw_data[dopant]['D']))
+        T_vals = np.array(raw_data[dopant]['T']) + 273.15
+        A = np.vstack([1 / T_vals, np.ones_like(T_vals)]).T
+        Ea, logD0 = np.linalg.lstsq(A, D_vals, rcond=None)[0]
+        D_profile = 10 ** (logD0 - Ea / (1 / T_predict[:num_atoms]))
+        D_profile /= np.max(D_profile)
+
+        symbol = dopant[0]
+        for i in range(num_atoms):
+            xyz_lines.append(f"{symbol} 0.0 0.0 {z_positions[i]:.2f} {D_profile[i]:.4f}")
+
+    xyz_text = "\n".join(xyz_lines)
+    st.code(xyz_text, language="xyz")
+    st.download_button("⬇️ Download Multi-Dopant .xyz", xyz_text.encode(), file_name="multi_dopant_profile.xyz")
+
+
+# ----------------------------- SESSION HISTORY TRACKING
+if st.button("💾 Save to Session History", key="save_session"):
+    st.session_state.history.append({
+        "dopant": selected_dopant,
+        "temperature_C": temp_input,
+        "D_predicted": D_user,
+        "Ea (eV)": Ea_eV,
+        "D0 (cm²/s)": D0_val
+    })
+    st.success("✅ Saved current run to session history!")
+
+if st.session_state.history:
+    st.markdown("### 🧾 Previous Runs (Session History)")
+    history_df = pd.DataFrame(st.session_state.history)
+    st.dataframe(history_df)
+    hist_csv = history_df.to_csv(index=False).encode()
+    st.download_button("⬇️ Download Session History", hist_csv, file_name="session_history.csv")
+
