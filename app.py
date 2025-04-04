@@ -16,20 +16,17 @@ st.caption("Powered by Physics-Informed Neural Networks • Built with ❤️ in
 
 # Sidebar user input
 with st.sidebar:
-    st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Silicon_Structure.svg/2560px-Silicon_Structure.svg.png", use_column_width=True)
+     st.image(...)  # ✅ 4 spaces/tab in
     st.subheader("🔧 Choose Settings")
 
-    selected_dopant = st.selectbox("🧪 Dopant", [
-        "Phosphorus", "Boron", "Arsenic", "Antimony", "Gallium", "Nitrogen"])
+    selected_dopant = st.selectbox(...)
+    temp_input = st.slider(...)
 
-    temp_input = st.slider("🌡️ Temperature (°C)", 600, 1300, 1000)
+    st.subheader("🔍 Compare Two Dopants")
+    dopant_1 = st.selectbox(...)
+    dopant_2 = st.selectbox(...)
 
     st.markdown("---")
-    st.subheader("🔍 Compare Two Dopants")
-dopant_1 = st.selectbox("Select Dopant 1", list(raw_data.keys()), index=0, key="dopant1")
-dopant_2 = st.selectbox("Select Dopant 2", list(raw_data.keys()), index=1, key="dopant2")
-
-st.markdown("---")
 
     st.subheader("📁 Upload New Data")
     uploaded_file = st.file_uploader("Upload Dopant CSV (T, D)", type=["csv"])
