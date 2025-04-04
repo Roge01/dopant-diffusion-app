@@ -90,6 +90,11 @@ invT_predict = 1 / T_predict
 invT_scaled = scaler_X.transform(invT_predict.reshape(-1, 1))
 logD_pred = model.predict(invT_scaled)
 D_pred = 10**logD_pred.flatten()
+# Compute R² score
+y_pred_for_r2 = model.predict(invT_scaled)
+r2 = r2_score(logD_fit, y_pred_for_r2)
+st.metric("📊 R² Score of Model", f"{r2:.4f}")
+
 
 # Arrhenius Fit
 X_fit = 1 / T_predict.reshape(-1, 1)
@@ -111,18 +116,43 @@ dopant_colors = {
     "Nitrogen": "brown"
 }
 
-for dopant, color in dopant_colors.items():
-    T_lit = np.array(raw_data[dopant]['T']) + 273.15
-    D_lit = np.array(raw_data[dopant]['D'])
-    ax.scatter(T_lit, np.log10(D_lit), label=f"{dopant} (Literature)", color=color, s=60, edgecolors='k', alpha=0.8)
-    
-ax.set_xlabel("Temperature (K)", fontsize=12)
-ax.set_ylabel("log₁₀(Diffusivity [cm²/s])", fontsize=12)
+fig, ax = plt.subplots(figsize=(12, 6))
+
+for dopant in [dopant_1, dopant_2]:
+    T_vals = np.array(raw_data[dopant]['T']) + 273.15
+    D_vals = np.array(raw_data[dopant]['D'])
+    label = f"{dopant} (Literature)"
+    color = dopant_colors[dopant]
+    ax.scatter(T_vals, np.log10(D_vals), label=label, color=color, s=60, edgecolors='k', alpha=0.8)
+
+# Plot PINN prediction
+if st.session_state.plot_scale == "Linear D":
+    ax.plot(T_predict, D_pred, 'k--', label='PINN Prediction', linewidth=2)
+    ax.set_ylabel("Diffusivity [cm²/s]", fontsize=12)
+    ax.set_yscale("linear")
+    ax.set_ylim(1e-20, 1e-12)
+else:
+    ax.plot(T_predict, logD_pred, 'k--', label='PINN Prediction', linewidth=2)
+    ax.set_ylabel("log₁₀(Diffusivity [cm²/s])", fontsize=12)
+    ax.set_yscale("linear")
+
+if st.session_state.temp_unit == "Celsius (°C)":
+    ax.set_xlabel("Temperature (°C)", fontsize=12)
+    ticks = np.linspace(600, 1300, 8)
+    ax.set_xticks(ticks + 273.15)
+    ax.set_xticklabels([f"{int(t)}" for t in ticks])
+else:
+    ax.set_xlabel("Temperature (K)", fontsize=12)
+
+arrhenius_eq = f"log₁₀(D) = {logD0_fit:.2f} - {Ea_fit:.2f}/kT"
+ax.text(0.05, 0.92, arrhenius_eq, transform=ax.transAxes, fontsize=12,
+        bbox=dict(facecolor='white', alpha=0.8))
+
 ax.set_title("📈 PINN Prediction vs Literature Data", fontsize=14)
 ax.legend()
 ax.grid(True)
+st.pyplot(fig)
 
-ax.plot(T_predict, logD_pred, 'k--', label='PINN Prediction', linewidth=2)
 
 ax.set_xlabel("Temperature (K)", fontsize=12)
 ax.set_ylabel(r"$\log_{10}$(Diffusivity) [cm²/s]", fontsize=12)
@@ -130,12 +160,25 @@ ax.set_title("📊 PINN Prediction vs Literature Data", fontsize=14, weight='bol
 ax.legend(loc='best', fontsize=9)
 ax.grid(True, linestyle='--', alpha=0.6)
 st.pyplot(fig)
+st.caption("ℹ️ **Note:** The PINN prediction (dashed line) is based on a global model trained using all dopants. It does not change when switching dopants.")
 
 
 # Ea & D0 display
 Ea_eV = Ea_fit * 8.617e-5  # eV
 D0_val = 10**logD0_fit
 st.success(f"**Arrhenius Fit:** D = {D0_val:.2e} * exp(-{Ea_eV:.3f} eV / kT)")
+st.caption("This classification is based on the pre-exponential factor D₀.")
+
+# Diffusivity category label
+if D0_val > 1e-13:
+    category = "🟥 High Diffusivity"
+elif D0_val > 1e-17:
+    category = "🟨 Moderate Diffusivity"
+else:
+    category = "🟦 Low Diffusivity"
+
+st.markdown(f"### 🧠 Diffusivity Category: {category}")
+
 # Optional: download Arrhenius params
 arrhenius_df = pd.DataFrame({
     "Dopant": [selected_dopant],
@@ -151,6 +194,16 @@ T_user = temp_input + 273.15
 invT_user = 1 / T_user
 D_user = 10 ** model.predict(scaler_X.transform([[invT_user]])).flatten()[0]
 st.info(f"📍 At {temp_input}°C, predicted D ≈ {D_user:.2e} cm²/s")
+st.caption("Want to know what temperature gives you a specific diffusivity? Use the tool below! 👇")
+
+with st.expander("🔁 Inverse Prediction: Find Temperature from D"):
+    logD_input = st.number_input("Enter log₁₀(Diffusivity)", value=-16.0)
+    predicted_invX = model.predict(np.array([[logD_input]]))
+    T_estimate_K = 1 / scaler_X.inverse_transform(predicted_invX)[0][0]
+    T_estimate_C = T_estimate_K - 273.15
+    st.write(f"Estimated Temperature: {T_estimate_C:.2f} °C")
+    
+
 
 # Download buttons
 csv_data = pd.DataFrame({"T (K)": T_predict, "D (cm^2/s)": D_pred})
