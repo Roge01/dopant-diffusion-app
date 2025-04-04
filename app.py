@@ -109,6 +109,7 @@ std_resid = np.std(residuals)
 # 95% confidence interval width
 ci = 1.96 * std_resid
 logD_pred = y_pred.flatten()  # Final predicted line to plot
+logD_fit = np.log10(D_pred)
 
 # Calculate confidence interval (assuming residual normality)
 residuals = logD_fit - model.predict(invT_scaled).flatten()
@@ -169,6 +170,8 @@ for dopant in [dopant_1, dopant_2]:
 # PINN prediction line
 if st.session_state.plot_scale == "Linear D":
     ax.plot(T_predict, D_pred, 'k--', label='PINN Prediction')
+    ax.fill_between(T_predict, logD_pred - ci, logD_pred + ci, color='gray', alpha=0.3, label='95% CI')
+
     ax.set_ylabel("Diffusivity [cm²/s]")
     ax.set_yscale("linear")
     ax.set_ylim(1e-20, 1e-12)
