@@ -32,7 +32,7 @@ if "temp_unit" not in st.session_state:
 
 # ----------------------------- PAGE CONFIG
 st.set_page_config(page_title="ML-Enhanced Diffusion Modeling", layout="wide")
-st.title("🧬 DiffuLab: ML-Enhanced Diffusion Modeling")
+st.title("DiffuLab: ML-Enhanced Diffusion Modeling")
 st.caption("Powered by Physics-Informed Neural Networks • Built with ❤️ in Streamlit")
 
 # ----------------------------- SIDEBAR
@@ -87,7 +87,7 @@ def train_model():
 model = train_model()
 
 # ----------------------------- PREDICTION & FITTING
-T_predict = np.linspace(600, 1300, 300) + 273.15
+T_predict = np.linspace(600, 1300, 1000) + 273.15
 invT_predict = 1 / T_predict
 invT_scaled = scaler_X.transform(invT_predict.reshape(-1, 1))
 logD_pred = model.predict(invT_scaled)
@@ -97,9 +97,30 @@ D_pred = 10**logD_pred.flatten()
 X_fit = 1 / T_predict.reshape(-1, 1)
 logD_fit = np.log10(D_pred)
 A = np.vstack([X_fit.flatten(), np.ones_like(X_fit.flatten())]).T
-Ea_fit, logD0_fit = np.linalg.lstsq(A, logD_fit, rcond=None)[0]
-Ea_eV = Ea_fit * 8.617e-5
+from sklearn.linear_model import LinearRegression
+from scipy.stats import t
+
+# Arrhenius Fit with 95% Confidence Interval
+X_fit = 1 / T_predict.reshape(-1, 1)
+y_fit = np.log10(D_pred).reshape(-1, 1)
+
+# Fit linear regression
+reg_model = LinearRegression().fit(X_fit, y_fit)
+logD_pred_fit = reg_model.predict(X_fit).flatten()
+
+# Confidence interval calculation
+n = len(X_fit)
+mse = np.mean((logD_pred_fit - y_fit.flatten()) ** 2)
+se = np.sqrt(mse * (1/n + (X_fit - X_fit.mean())**2 / np.sum((X_fit - X_fit.mean())**2)))
+t_val = t.ppf(0.975, df=n-2)
+ci = t_val * se.flatten()  # 95% confidence interval
+
+# Extract Arrhenius coefficients
+Ea_fit = -reg_model.coef_[0][0]  # slope = -Ea/k
+logD0_fit = reg_model.intercept_[0]
+Ea_eV = Ea_fit * 8.617e-5  # convert to eV
 D0_val = 10**logD0_fit
+
 
 # R² Score
 y_pred_for_r2 = model.predict(invT_scaled)
@@ -128,8 +149,11 @@ if st.session_state.plot_scale == "Linear D":
     ax.set_yscale("linear")
     ax.set_ylim(1e-20, 1e-12)
 else:
-    ax.plot(T_predict, logD_pred, 'k--', label='PINN Prediction')
-    ax.set_ylabel("log₁₀(Diffusivity [cm²/s])")
+   # Plot PINN Prediction with Confidence Interval
+ax.plot(T_predict, logD_pred, 'k--', label='PINN Prediction')
+ax.fill_between(T_predict, logD_pred - ci, logD_pred + ci, color='gray', alpha=0.3, label='95% CI')
+ax.set_ylabel("log₁₀(Diffusivity [cm²/s])")
+
 
 if st.session_state.temp_unit == "Celsius (°C)":
     ax.set_xlabel("Temperature (°C)")
