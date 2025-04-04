@@ -43,6 +43,9 @@ raw_data = {
     "Gallium":    {"T": [900, 1000, 1100],                 "D": [2.1e-16, 1.0e-15, 5.3e-15]},
     "Nitrogen":   {"T": [800, 900, 1000, 1100, 1200],      "D": [2.9e-20, 2.7e-19, 1.9e-18, 1.2e-17, 5.0e-17]}
 }
+st.subheader("🔍 Compare Two Dopants")
+dopant_1 = st.selectbox("Select Dopant 1", list(raw_data.keys()), index=0, key="dopant1")
+dopant_2 = st.selectbox("Select Dopant 2", list(raw_data.keys()), index=1, key="dopant2")
 
 if uploaded_file is not None:
     try:
@@ -125,6 +128,7 @@ for dopant in [dopant_1, dopant_2]:
     label = f"{dopant} (Literature)"
     color = dopant_colors[dopant]
     ax.scatter(T_vals, np.log10(D_vals), label=label, color=color, s=60, edgecolors='k', alpha=0.8)
+
 
 # Plot PINN prediction
 if st.session_state.plot_scale == "Linear D":
